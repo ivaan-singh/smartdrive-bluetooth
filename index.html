@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BLE Arduino Control</title>
+</head>
+<body>
+
+<h2>Arduino BLE Control</h2>
+
+<button onclick="connect()">Connect</button>
+<br><br>
+
+<button onclick="send('D5 HIGH')">D5 ON</button>
+<button onclick="send('D5 LOW')">D5 OFF</button>
+
+<br><br>
+
+<input id="pin" placeholder="Pin (e.g. 4)">
+<select id="state">
+  <option>HIGH</option>
+  <option>LOW</option>
+</select>
+<button onclick="custom()">Set Pin</button>
+
+<script>
+let characteristic;
+
+async function connect() {
+  const device = await navigator.bluetooth.requestDevice({
+    acceptAllDevices: true,
+    optionalServices: ['ffe0'] // HM-10 service
+  });
+
+  const server = await device.gatt.connect();
+  const service = await server.getPrimaryService('ffe0');
+  characteristic = await service.getCharacteristic('ffe1');
+
+  alert("Connected!");
+}
+
+async function send(cmd) {
+  const encoder = new TextEncoder();
+  await characteristic.writeValue(encoder.encode(cmd + "\n"));
+}
+
+function custom() {
+  const pin = document.getElementById("pin").value;
+  const state = document.getElementById("state").value;
+  send("D" + pin + " " + state);
+}
+</script>
+
+</body>
+</html>
